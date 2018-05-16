@@ -41,6 +41,8 @@ import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.JobList;
 import com.google.api.services.bigquery.model.JobStatus;
+import com.google.api.services.bigquery.model.ProjectList;
+import com.google.api.services.bigquery.model.ProjectList.Projects;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
@@ -81,6 +83,18 @@ public class HttpBigQueryRpc implements BigQueryRpc {
               .setId(datasetPb.getId())
               .setKind(datasetPb.getKind())
               .setLabels(datasetPb.getLabels());
+        }
+      };
+
+  @InternalApi("Visible for testing")
+  static final Function<ProjectList.Projects, Projects> LIST_TO_PROJECTS =
+      new Function<ProjectList.Projects, Projects>() {
+        @Override
+        public Projects apply(ProjectList.Projects projectsPb) {
+          return new Projects()
+              .setFriendlyName(projectsPb.getFriendlyName())
+              .setId(projectsPb.getId())
+              .setKind(projectsPb.getKind());
         }
       };
 
@@ -131,6 +145,26 @@ public class HttpBigQueryRpc implements BigQueryRpc {
           Iterables.transform(
               datasets != null ? datasets : ImmutableList.<DatasetList.Datasets>of(),
               LIST_TO_DATASET));
+    } catch (IOException ex) {
+      throw translate(ex);
+    }
+  }
+
+  @Override
+  public Tuple<String, Iterable<Projects>> listProjects(Map<Option, ?> options) {
+    try {
+      ProjectList projectList = bigquery.projects()
+          .list()
+          .setMaxResults(Option.MAX_RESULTS.getLong(options))
+          .setPageToken(Option.PAGE_TOKEN.getString(options))
+          .setPageToken(Option.PAGE_TOKEN.getString(options))
+          .execute();
+      Iterable<ProjectList.Projects> projects = projectList.getProjects();
+      return Tuple.of(
+          projectList.getNextPageToken(),
+          Iterables.transform(
+              projects != null ? projects : ImmutableList.<ProjectList.Projects>of(),
+              LIST_TO_PROJECTS));
     } catch (IOException ex) {
       throw translate(ex);
     }

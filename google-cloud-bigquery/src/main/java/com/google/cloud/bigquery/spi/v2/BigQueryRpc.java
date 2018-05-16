@@ -20,6 +20,7 @@ import com.google.api.core.InternalExtensionOnly;
 import com.google.api.services.bigquery.model.Dataset;
 import com.google.api.services.bigquery.model.GetQueryResultsResponse;
 import com.google.api.services.bigquery.model.Job;
+import com.google.api.services.bigquery.model.ProjectList.Projects;
 import com.google.api.services.bigquery.model.Table;
 import com.google.api.services.bigquery.model.TableDataInsertAllRequest;
 import com.google.api.services.bigquery.model.TableDataInsertAllResponse;
@@ -87,6 +88,13 @@ public interface BigQueryRpc extends ServiceRpc {
    * @throws BigQueryException upon failure
    */
   Tuple<String, Iterable<Dataset>> listDatasets(String projectId, Map<Option, ?> options);
+
+  /**
+   * Lists the projects in which the caller (user of service account) has a BigQuery related role.
+   *
+   * @throws BigQueryException upon failure
+   */
+  Tuple<String, Iterable<Projects>> listProjects(Map<Option, ?> options);
 
   /**
    * Creates a new dataset.

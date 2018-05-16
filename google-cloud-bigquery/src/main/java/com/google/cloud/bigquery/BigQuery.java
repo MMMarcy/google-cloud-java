@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.api.core.InternalApi;
 import com.google.api.gax.paging.Page;
+import com.google.api.services.bigquery.model.ProjectList.Projects;
 import com.google.cloud.FieldSelector;
 import com.google.cloud.FieldSelector.Helper;
 import com.google.cloud.RetryOption;
@@ -150,6 +151,34 @@ public interface BigQuery extends Service<BigQueryOptions> {
   }
 
   /**
+   * Fields of a BigQuery Project resource.
+   *
+   * @see <a href="https://cloud.google.com/bigquery/docs/reference/rest/v2/projects#resource">
+   * Project Resource</a>
+   */
+  enum ProjectField implements FieldSelector {
+    ETAG("etag"),
+    FRIENDLY_NAME("friendlyName"),
+    ID("id"),
+    PROJECT_REFERENCE("projectReference"),
+    NUMERICE_ID("numericId");
+
+    static final List<? extends FieldSelector> REQUIRED_FIELDS =
+        ImmutableList.of(ID, NUMERICE_ID);
+
+    private final String selector;
+
+    ProjectField(String selector) {
+      this.selector = selector;
+    }
+
+
+    @Override
+    public String getSelector() {
+      return selector;
+    }
+  }
+  /**
    * Class for specifying dataset list options.
    */
   class DatasetListOption extends Option {
@@ -222,6 +251,23 @@ public interface BigQuery extends Service<BigQueryOptions> {
      */
     public static DatasetDeleteOption deleteContents() {
       return new DatasetDeleteOption(BigQueryRpc.Option.DELETE_CONTENTS, true);
+    }
+  }
+
+  /**
+   * Class for specifying project list options.
+   */
+  class ProjectListOption extends Option {
+
+    ProjectListOption(BigQueryRpc.Option option, Object value) { super(option, value); }
+
+    public static ProjectListOption pageSize(long pageSize){
+      checkArgument(pageSize > 0);
+      return new ProjectListOption(BigQueryRpc.Option.MAX_RESULTS, pageSize);
+    }
+
+    public static ProjectListOption pageToken(String pageToken){
+      return new ProjectListOption(BigQueryRpc.Option.PAGE_TOKEN, pageToken);
     }
   }
 
@@ -664,6 +710,21 @@ public interface BigQuery extends Service<BigQueryOptions> {
    * @throws BigQueryException upon failure
    */
   Page<Dataset> listDatasets(String projectId, DatasetListOption... options);
+
+  /**
+   * Lists all projects to which you have been granted any project role.
+   *
+   * <p>Example of listing datasets in a project, specifying the page size.
+   * <pre> {@code
+   * Page<Project> projects = bigQuery.listProjects();
+   * for (Project project: projects.iterateAll()) {
+   *   // do something with the project
+   * }
+   * }</pre>
+   *
+   * @throws BigQueryException upon failure
+   */
+  Page<Project> listProjects(ProjectListOption... options);
 
   /**
    * Deletes the requested dataset.
